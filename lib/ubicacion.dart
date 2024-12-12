@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UbicacionScreen extends StatelessWidget {
@@ -10,27 +9,17 @@ class UbicacionScreen extends StatelessWidget {
       'nombre': 'Sucursal 1',
       'direccion': 'Calle Ejemplo 123, Ciudad',
       'telefono': '(123) 456-7890',
+      'correo': 'sucursal1@example.com',
       'horario': 'Lunes a Viernes: 9:00 AM - 6:00 PM',
     },
     {
       'nombre': 'Sucursal 2',
       'direccion': 'Avenida Ficticia 456, Ciudad',
       'telefono': '(321) 654-0987',
+      'correo': 'sucursal2@example.com',
       'horario': 'Lunes a Viernes: 9:00 AM - 6:00 PM',
     },
   ];
-
-  // Función para abrir WhatsApp
-  Future<void> _launchWhatsApp() async {
-    const phoneNumber = '+593999999999';
-    final url = 'https://wa.me/$phoneNumber';
-
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      throw 'No se puede abrir WhatsApp';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +31,7 @@ class UbicacionScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
               'Estamos ubicados en el corazón de la ciudad',
@@ -55,14 +45,36 @@ class UbicacionScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: _launchWhatsApp,
-              icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.white),
-              label: const Text('Contáctanos en WhatsApp'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366)),
+            // Información de contacto
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(FontAwesomeIcons.phone, color: Colors.green),
+                const SizedBox(width: 10),
+                const Text(
+                  '+593 962 658 076',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(FontAwesomeIcons.envelope, color: Colors.red),
+                const SizedBox(width: 10),
+                const Text(
+                  'iwz.vargas@yavirac.edu.ec',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
             ),
             const SizedBox(height: 40),
-            const Text('Nuestras Sucursales', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Nuestras Sucursales',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
@@ -70,7 +82,7 @@ class UbicacionScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final sucursal = sucursales[index];
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                    margin: const EdgeInsets.symmetric(vertical: 10),
                     elevation: 5,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -78,20 +90,48 @@ class UbicacionScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.store, color: Colors.blue),
                               const SizedBox(width: 10),
-                              Text(sucursal['nombre']!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                              Expanded(
+                                child: Text(
+                                  sucursal['nombre']!,
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text('Dirección: ${sucursal['direccion']}'),
+                          Text(
+                            'Dirección: ${sucursal['direccion']}',
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
                               const Icon(Icons.phone, color: Colors.green),
                               const SizedBox(width: 8),
-                              Text('Teléfono: ${sucursal['telefono']}'),
+                              Expanded(
+                                child: Text(
+                                  'Teléfono: ${sucursal['telefono']}',
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.email, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Correo: ${sucursal['correo']}',
+                                  softWrap: true,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -99,7 +139,12 @@ class UbicacionScreen extends StatelessWidget {
                             children: [
                               const Icon(Icons.access_time, color: Colors.orange),
                               const SizedBox(width: 8),
-                              Text('Horario: ${sucursal['horario']}'),
+                              Expanded(
+                                child: Text(
+                                  'Horario: ${sucursal['horario']}',
+                                  softWrap: true,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),

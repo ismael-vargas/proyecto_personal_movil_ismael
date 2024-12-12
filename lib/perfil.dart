@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -12,27 +14,90 @@ class _PerfilScreenState extends State<PerfilScreen> {
   final TextEditingController _cedulaController = TextEditingController();
   final TextEditingController _nombresController = TextEditingController();
   final TextEditingController _apellidosController = TextEditingController();
-  final TextEditingController _fechaController = TextEditingController();
-  final TextEditingController _edadController = TextEditingController();
+  final TextEditingController _correoController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _fechaNacimientoController = TextEditingController();
 
   String _genero = 'Masculino';
-  String _estadoCivil = 'Soltero';
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Datos de ejemplo, aquí puedes cargar los datos del usuario actual
-    _cedulaController.text = "1234567890";
-    _nombresController.text = "Juan";
-    _apellidosController.text = "Perez";
-    _fechaController.text = "15/08/1990";
-    _edadController.text = "34";
-    _genero = 'Masculino';
-    _estadoCivil = 'Soltero';
+    _cargarDatosUsuario();
   }
+
+  Future<void> _cargarDatosUsuario() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('usuarios')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+          _cedulaController.text = data['cedula'] ?? '';
+          _nombresController.text = data['nombres'] ?? '';
+          _apellidosController.text = data['apellidos'] ?? '';
+          _correoController.text = data['correo'] ?? '';
+          _fechaNacimientoController.text = data['fechaNacimiento'] ?? '';
+          _genero = data['genero'] ?? 'Masculino';
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar datos: $e')),
+      );
+    }
+  }
+
+ Future<void> _editarPerfil() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Si hay una nueva contraseña, la actualizamos en Firebase Authentication
+        if (_passwordController.text.isNotEmpty) {
+          await user.updatePassword(_passwordController.text.trim());
+        }
+
+        await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).update({
+          'cedula': _cedulaController.text.trim(),
+          'nombres': _nombresController.text.trim(),
+          'apellidos': _apellidosController.text.trim(),
+          'correo': _correoController.text.trim(),
+          'fechaNacimiento': _fechaNacimientoController.text.trim(),
+          'genero': _genero,
+        });
+
+        // Si se actualizó el correo, también lo cambiamos en Firebase Authentication
+        if (_correoController.text.trim() != user.email) {
+          await user.updateEmail(_correoController.text.trim());
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil actualizado exitosamente')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
+
 
   String? _validateCedula(String? value) {
     if (value == null || value.isEmpty) {
@@ -54,9 +119,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return null;
   }
 
-  String? _validateEdad(String? value) {
-    if (value == null || value.isEmpty || int.tryParse(value) == null) {
-      return 'Edad no válida';
+  String? _validateCorreo(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Por favor ingrese su correo electrónico';
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+      return 'Ingrese un correo electrónico válido';
     }
     return null;
   }
@@ -70,238 +137,142 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return null;
   }
 
-  void _calculateAge(DateTime birthDate) {
-    DateTime today = DateTime.now();
-    int age = today.year - birthDate.year;
-    if (today.month < birthDate.month ||
-        (today.month == birthDate.month && today.day < birthDate.day)) {
-      age--;
-    }
-    _edadController.text = age.toString();
+  Widget _buildTextField(String label, TextEditingController controller,
+      String? Function(String?) validator, IconData icon,
+      {bool obscureText = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _buildDateField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.calendar_today),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        readOnly: true,
+        onTap: () async {
+          DateTime? pickedDate = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(1900),
+            lastDate: DateTime.now(),
+          );
+          if (pickedDate != null) {
+            setState(() {
+              controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+            });
+          }
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(fontFamily: 'Roboto'),
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFF5A623), // Orange color for the header
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.of(context).pop(); // Navegar hacia atrás
-            },
-          ),
-        ),
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFF5A623), Color(0xFFF47B00)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Form(
-                  key: _formKey, // Form Key
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Editar Perfil',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _cedulaController,
-                        decoration: InputDecoration(
-                          labelText: 'Cédula',
-                          prefixIcon: const Icon(Icons.credit_card),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: _validateCedula,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nombresController,
-                        decoration: InputDecoration(
-                          labelText: 'Nombre',
-                          prefixIcon: const Icon(Icons.person),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        validator: _validateName,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _apellidosController,
-                        decoration: InputDecoration(
-                          labelText: 'Apellido',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        validator: _validateName,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _fechaController,
-                        decoration: InputDecoration(
-                          labelText: 'Fecha de Nacimiento',
-                          hintText: 'DD/MM/YYYY',
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        keyboardType: TextInputType.datetime,
-                        onTap: () async {
-                          DateTime? pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(1900),
-                            lastDate: DateTime(2101),
-                          );
-                          if (pickedDate != null) {
-                            setState(() {
-                              _fechaController.text =
-                                  DateFormat('dd/MM/yyyy').format(pickedDate);
-                              _calculateAge(pickedDate);
-                            });
-                          }
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingrese su fecha de nacimiento';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _edadController,
-                        decoration: InputDecoration(
-                          labelText: 'Edad',
-                          prefixIcon: const Icon(Icons.accessibility_new),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        readOnly: true,
-                        validator: _validateEdad,
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Género'),
-                          ListTile(
-                            title: const Text('Masculino'),
-                            leading: Radio<String>(
-                              value: 'Masculino',
-                              groupValue: _genero,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _genero = value!;
-                                });
-                              },
-                            ),
-                          ),
-                          ListTile(
-                            title: const Text('Femenino'),
-                            leading: Radio<String>(
-                              value: 'Femenino',
-                              groupValue: _genero,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _genero = value!;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Estado Civil con Dropdown
-                      DropdownButtonFormField<String>(
-                        value: _estadoCivil,
-                        decoration: InputDecoration(
-                          labelText: 'Estado Civil',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'Soltero', child: Text('Soltero')),
-                          DropdownMenuItem(value: 'Casado', child: Text('Casado')),
-                          DropdownMenuItem(value: 'Divorciado', child: Text('Divorciado')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _estadoCivil = value!;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          prefixIcon: const Icon(Icons.lock),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        obscureText: true,
-                        validator: _validatePassword,
-                      ),
-                      const SizedBox(height: 30),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState?.validate() ?? false) {
-                            // Guardar los datos o hacer alguna acción
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor: const Color.fromARGB(255, 247, 172, 51),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text('Guardar Cambios'),
-                      ),
-                    ],
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFE0B2),
+      appBar: AppBar(
+        title: const Text("Perfil"),
+        backgroundColor: const Color.fromARGB(255, 247, 148, 1),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
                   ),
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 45,
+                        backgroundColor: Colors.transparent,
+                        backgroundImage: AssetImage('images/SUZUKIS.png'),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Text(
+                      'Editar Perfil',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField('Cédula', _cedulaController, _validateCedula, Icons.credit_card),
+                    _buildTextField('Nombre', _nombresController, _validateName, Icons.person),
+                    _buildTextField('Apellido', _apellidosController, _validateName, Icons.person_outline),
+                    _buildTextField('Correo Electrónico', _correoController, _validateCorreo, Icons.email),
+                    _buildTextField('Contraseña', _passwordController, _validatePassword, Icons.lock, obscureText: true),
+                    _buildDateField('Fecha de Nacimiento', _fechaNacimientoController),
+                    const SizedBox(height: 30),
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple, // Morado oscuro
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: _editarPerfil,
+                              icon: const Icon(Icons.save, color: Colors.white),
+                              label: const Text(
+                                'Guardar Cambios',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ],
                 ),
               ),
             ),

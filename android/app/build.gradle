@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.proyecto"
+    namespace = "com.suzuisma.proyecto"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,11 +20,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.proyecto"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Especifica tu propio ID de aplicación y otros ajustes
+        applicationId = "com.suzuisma.proyecto"
+        minSdkVersion 23 // Modifica aquí el minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -32,13 +30,15 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Si es necesario, agrega tu propia configuración de firma para la versión de lanzamiento.
             signingConfig = signingConfigs.debug
         }
     }
+
+    // Aplica el plugin de Google Services para Firebase
+    apply plugin: 'com.google.gms.google-services' // Asegúrate de que esta línea esté presente
 }
 
 flutter {
-    source = "../.."
+    source = "../.." // Ruta de tu proyecto Flutter
 }

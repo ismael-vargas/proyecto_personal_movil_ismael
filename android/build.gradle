@@ -1,6 +1,19 @@
+buildscript {
+    repositories {
+        google()  // Necesario para acceder a los servicios de Firebase
+        mavenCentral()
+    }
+    dependencies {
+        // Asegúrate de tener la versión compatible de Gradle
+        classpath 'com.android.tools.build:gradle:8.0.0'  // O la versión que sea compatible con tu proyecto
+        classpath 'com.google.gms:google-services:4.3.15'  // Plugin de Firebase para usar en el proyecto
+        // Si estás utilizando otros servicios de Firebase, como Analytics o Firestore, agrega las dependencias correspondientes.
+    }
+}
+
 allprojects {
     repositories {
-        google()
+        google()  // Necesario para acceder a las dependencias de Firebase
         mavenCentral()
     }
 }

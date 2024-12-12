@@ -30,7 +30,7 @@ class BienvenidaScreen extends StatelessWidget {
                     const Align(
                       alignment: Alignment.center,
                       child: Text(
-                        'Proyecto de Ismael',
+                        'Proyecto Suzukis',
                         style: TextStyle(
                           fontSize: 32,
                           fontFamily: 'RubikMonoOne',
@@ -136,7 +136,7 @@ class BienvenidaScreen extends StatelessWidget {
                           size: 24,
                         ),
                         label: const Text(
-                          'Regístrate',
+                          'Regístrarse',
                           style: TextStyle(
                             fontSize: 20,
                             color: Color(0xFFF4F5F7),
