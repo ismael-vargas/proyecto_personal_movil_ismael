@@ -165,7 +165,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cotización', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Motos de exhibición', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.orange,
         elevation: 5,
       ),

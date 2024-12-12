@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'cotizacion.dart'; // Asegúrate de que la ruta sea correcta
+import 'cotizacion.dart'; 
 
 
 class DescripcionProyectoScreen extends StatelessWidget {

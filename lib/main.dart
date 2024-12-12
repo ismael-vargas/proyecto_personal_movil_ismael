@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // Importa el archivo de configuración de Firebase
+import 'firebase_options.dart'; 
 
 import 'login.dart'; // Pantalla de login
 import 'home.dart'; // Pantalla principal (MainScreen)
 import 'bienvenidad.dart'; // Pantalla de bienvenida
 import 'perfil.dart'; // Nueva pantalla Perfil
-import 'descripcion_proyecto.dart'; // Nueva pantalla Descripción del Proyecto
-import 'cotizacion.dart'; // Nueva pantalla Cotización
-import 'ubicacion.dart'; // Nueva pantalla Ubicación
-import 'carrito.dart'; // Importa la pantalla Carrito
+import 'descripcion_proyecto.dart'; //  pantalla Descripción del Proyecto
+import 'cotizacion.dart'; // pantalla Cotización
+import 'ubicacion.dart'; // pantalla Ubicación
+import 'carrito.dart'; // pantalla Carrito
 
 void main() async {
   // Asegúrate de que la inicialización de widgets esté lista antes de usar Firebase

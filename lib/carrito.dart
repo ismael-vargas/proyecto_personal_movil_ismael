@@ -5,7 +5,7 @@ class CarritoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Datos simulados del carrito
+    
     final List<Map<String, dynamic>> productosCarrito = [
       {
         'nombre': 'Suzuki GN 125',
@@ -125,7 +125,7 @@ class CarritoScreen extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Acción para continuar con la compra (puedes agregar lógica aquí)
+                  
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,

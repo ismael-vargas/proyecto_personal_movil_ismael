@@ -138,7 +138,7 @@ Future<void> _loadUserData() async {
             ListTile(
               leading: const Icon(Icons.monetization_on, color: Color(0xFFF47B00)),
               title: const Text(
-                "Cotizar Moto",
+                "Motocicletas de ventas",
                 style: TextStyle(fontFamily: 'Roboto-Regular'),
               ),
               onTap: () {
@@ -159,7 +159,7 @@ Future<void> _loadUserData() async {
             ListTile(
               leading: const Icon(Icons.shopping_cart, color: Color(0xFFF47B00)),
               title: const Text(
-                "Carrito",
+                "Monto total ventas",
                 style: TextStyle(fontFamily: 'Roboto-Regular'),
               ),
               onTap: () {

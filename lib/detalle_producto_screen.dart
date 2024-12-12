@@ -102,7 +102,7 @@ class DetalleProductoScreen extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.arrow_back, size: 20),
                     label: const Text(
-                      'Volver a la Cotización',
+                      'Volver a motocicletas ',
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
